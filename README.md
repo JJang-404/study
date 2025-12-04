@@ -1,2 +1,2 @@
 # My Study Project
-This repository contains my study materials for data science and AI.
+This repository contains my study materials for Computer Vision and AI.
