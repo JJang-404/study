@@ -1,0 +1,7 @@
+altair == 5.5.0
+numpy == 2.0.2
+onnxruntime == 1.19.2
+opencv-python-headless == 4.13.0.92
+pandas == 2.3.3
+streamlit == 1.50.0
+streamlit-drawable-canvas == 0.9.3
