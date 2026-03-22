@@ -136,7 +136,9 @@ with st.sidebar:
                                 fetch_movies.clear()
                                 registered = True
                             else:
-                                st.error("등록 실패")
+                                st.error(
+                                    f"등록 실패: {response.status_code} - {response.text}"
+                                )
                         except Exception as e:
                             st.error(f"서버 연결 오류: {e}")
                         if registered:
