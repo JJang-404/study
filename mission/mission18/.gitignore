@@ -1,0 +1,9 @@
+.env
+.env.*
+movies.db
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+guide/
+.streamlit/secrets.toml
