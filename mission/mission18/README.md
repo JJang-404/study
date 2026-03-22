@@ -2,6 +2,8 @@
 
 > 영화 리뷰를 작성하면 AI가 긍정/부정을 자동 분석하는 웹 서비스
 
+https://hjke3dzq6yt7wrebotmbqw.streamlit.app/
+
 ---
 
 ## 서비스 화면
@@ -26,7 +28,7 @@
 |---|---|
 | 프론트엔드 | Streamlit |
 | 백엔드 | FastAPI + Uvicorn |
-| 데이터베이스 | SQLite (SQLAlchemy ORM) |
+| 데이터베이스 | PostgreSQL (SQLAlchemy ORM) |
 | 감성 분석 모델 | `daekeun-ml/koelectra-small-v3-nsmc` (ONNX Runtime) |
 | 데이터 처리 | Pandas |
 
@@ -71,16 +73,21 @@ streamlit run movie_frontend.py
 
 ```
 mission18/
-├── movie_backend.py          # FastAPI 백엔드
-├── movie_frontend.py         # Streamlit 프론트엔드
-├── export_onnx.py            # KoELECTRA → ONNX 변환 스크립트
-├── requirements.txt          # 의존성 목록
-├── koelectra_onnx/           # ONNX 변환 모델 (export_onnx.py 실행 후 생성)
-├── img/                      # 이미지 캡쳐본
-├── movies.db                 # SQLite 데이터베이스
-└── utils/
-    └── icon.py
-    
+├── backend/
+│   ├── movie_backend.py          # FastAPI 백엔드
+│   ├── Dockerfile                # Docker 이미지 설정
+│   ├── requirements.txt          # 백엔드 의존성
+│   └── koelectra_onnx/           # ONNX 변환 모델
+├── frontend/
+│   ├── movie_frontend.py         # Streamlit 프론트엔드
+│   ├── requirements.txt          # 프론트엔드 의존성
+│   ├── runtime.txt               # Python 버전 설정
+│   └── utils/
+│       └── icon.py
+├── guide/                        # 배포 가이드 문서
+├── export_onnx.py                # KoELECTRA → ONNX 변환 스크립트
+├── img/                          # 이미지 캡쳐본
+└── README.md
 ```
 
 ---
@@ -90,12 +97,10 @@ mission18/
 ```
 Streamlit Cloud (프론트엔드)
         ↕ REST API (HTTPS + CORS)
-Railway / Render (FastAPI 백엔드, Docker)
-        ↕ PostgreSQL
-Supabase (클라우드 DB)
+Railway (FastAPI 백엔드, Docker)
+        ↕
+PostgreSQL (Railway)
 ```
-
-> 배포 상세 가이드 → [DEPLOY_GUIDE.md](DEPLOY_GUIDE.md)
 
 ---
 
