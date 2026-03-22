@@ -2,7 +2,7 @@ fastapi
 uvicorn
 sqlalchemy
 pydantic
-transformers
-torch --index-url https://download.pytorch.org/whl/cpu
-optimum[onnxruntime]
+onnxruntime
+tokenizers
+numpy
 python-dotenv
