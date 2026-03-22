@@ -3,11 +3,12 @@ import streamlit as st
 import requests
 import pandas as pd
 from utils import icon
+import os
 
 # 1. UI Configuration
 st.set_page_config(page_title="팝콘 감성 측정소", page_icon="🍿", layout="wide")
 
-API_URL = "http://localhost:8000"
+API_URL = os.environ.get("API_URL", st.secrets.get("API_URL", "http://localhost:8000"))
 MAIN_COLOR_BLUE = "#5597DD"
 MAIN_COLOR_PINK = "#D86EA3"
 
