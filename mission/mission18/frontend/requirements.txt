@@ -1,12 +1,4 @@
-replicate
 streamlit==1.37.0
 requests
+pandas
 streamlit-image-select
-fastapi
-uvicorn
-sqlalchemy
-pydantic
-transformers
-torch
-optimum[onnxruntime]
-python-dotenv
