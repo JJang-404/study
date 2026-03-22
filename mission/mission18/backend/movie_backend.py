@@ -165,7 +165,7 @@ _executor = ThreadPoolExecutor(max_workers=2)
 app = FastAPI(title="Movie Review API")
 
 allow_origins = [
-    "https://hjke3dzq6yt7wrebotmbqw.streamlit.app/",  # 스트림릿 클라우드 실제 주소
+    "https://hjke3dzq6yt7wrebotmbqw.streamlit.app",  # 스트림릿 클라우드 실제 주소
     "http://localhost:8501",  # 로컬 테스트용 스트림릿 기본 포트
 ]
 
