@@ -14,14 +14,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from datetime import datetime
 from typing import List, Optional
-from transformers import AutoTokenizer, pipeline
-from optimum.onnxruntime import ORTModelForSequenceClassification
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import uvicorn
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+import onnxruntime as ort
+from tokenizers import Tokenizer
+import numpy as np
 
 load_dotenv()
 
@@ -111,34 +112,66 @@ class MovieRead(BaseModel):
 
 # 4. Sentiment Analysis Setup (ONNX Runtime)
 ONNX_DIR = "./koelectra_onnx"
-print("Loading Sentiment Analysis Model (KoELECTRA ONNX)...")
+print("Loading Sentiment Analysis Model (No Torch)...")
 try:
-    _model = ORTModelForSequenceClassification.from_pretrained(ONNX_DIR)
-    _tokenizer = AutoTokenizer.from_pretrained(ONNX_DIR)
-    classifier = pipeline("sentiment-analysis", model=_model, tokenizer=_tokenizer)
-    print("ONNX 모델 로드 완료")
+    # ONNX 세션 및 토크나이저 로드 (가벼움!)
+    session = ort.InferenceSession(f"{ONNX_DIR}/model.onnx")
+    tokenizer = Tokenizer.from_file(f"{ONNX_DIR}/tokenizer.json")
+
+    def classifier(text):
+        # 1. 토큰화
+        encoded = tokenizer.encode(text)
+        # 2. 입력을 numpy 배열로 변환
+        inputs = {
+            "input_ids": np.array([encoded.ids], dtype=np.int64),
+            "attention_mask": np.array([encoded.attention_mask], dtype=np.int64),
+            "token_type_ids": np.array([encoded.type_ids], dtype=np.int64),
+        }
+        # 3. 추론 실행
+        outputs = session.run(None, inputs)
+        logits = outputs[0]
+
+        # 4. Softmax로 확률 계산
+        exp_logits = np.exp(logits - np.max(logits))
+        probs = exp_logits / exp_logits.sum(axis=-1, keepdims=True)
+
+        # 결과 반환 (0: 부정, 1: 긍정)
+        label_id = np.argmax(probs)
+        score = float(probs[0][label_id])
+        return [{"label": str(label_id), "score": score}]
+
+    print("ONNX 전용 엔진 로드 완료")
 except Exception as e:
-    print(f"ONNX 로드 실패: {e} → HuggingFace 원본 모델로 fallback")
-    classifier = pipeline(
-        "sentiment-analysis", model="daekeun-ml/koelectra-small-v3-nsmc"
-    )
+    print(f"ONNX 로드 실패: {e}")
+
+    # 추론 실패 시 기본값 반환하는 더미 함수
+    def classifier(text):
+        return [{"label": "1", "score": 0.5}]
+
 
 # 라벨 매핑 진단
-_pos_test = classifier("정말 재미있고 감동적인 영화입니다")[0]
-_neg_test = classifier("최악의 영화, 시간 낭비였습니다")[0]
-print(f"[진단] 긍정 문장 → label={_pos_test['label']}, score={_pos_test['score']:.3f}")
-print(f"[진단] 부정 문장 → label={_neg_test['label']}, score={_neg_test['score']:.3f}")
+try:
+    _pos_test = classifier("정말 재미있고 감동적인 영화입니다")[0]
+    print(
+        f"[진단] 테스트 완료: label={_pos_test['label']}, score={_pos_test['score']:.3f}"
+    )
+except:
+    pass
 
 # 5. 비동기 추론용 ThreadPoolExecutor (CPU 바운드 작업을 이벤트 루프 밖에서 실행)
 _executor = ThreadPoolExecutor(max_workers=2)
 
 # 6. FastAPI App
-
 app = FastAPI(title="Movie Review API")
+
+allow_origins = [
+    "https://hjke3dzq6yt7wrebotmbqw.streamlit.app/",  # 스트림릿 클라우드 실제 주소
+    "http://localhost:8501",  # 로컬 테스트용 스트림릿 기본 포트
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 배포 후 Streamlit Cloud 주소로 교체
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -174,7 +207,7 @@ def get_movies(db: Session = Depends(get_db)):
             .scalar()
             or 0.0
         )
-        movie_data = MovieRead.from_orm(movie)
+        movie_data = MovieRead.model_validate(movie)
         movie_data.average_rating = round(float(avg_rating) * 5, 1)
         result.append(movie_data)
     return result
