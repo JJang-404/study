@@ -1,0 +1,23 @@
+# 환경변수 — 키 유출 방지
+.env
+.env.local
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# 도구 생성물
+.playwright-mcp/
+.claude/settings.local.json
