@@ -1,0 +1,47 @@
+# 계층 간 통신 제한 — Azure NSG에 대응하는 로컬 구현 (AC-3, AC-5)
+# web → api → db 단방향 인접 통신만 허용한다.
+#
+# 참고: NetworkPolicy는 CNI가 지원해야 강제된다. 이 환경의 kindnet
+# (kindest/kindnetd:v20250512)은 강제하며, 정책 삭제/재적용 대조 실험으로
+# 확인했다 (2026-10-18, 2-1_k8s_status.md 4절).
+---
+# api 계층: web 네임스페이스에서 오는 8080만 허용
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-allow-from-web
+  namespace: api
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              tier: web
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# db 계층: api 네임스페이스에서 오는 5432만 허용.
+# web에서 db로 가는 직접 경로는 허용 목록에 없으므로 차단된다.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-allow-from-api
+  namespace: db
+spec:
+  podSelector:
+    matchLabels:
+      app: db
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              tier: api
+      ports:
+        - protocol: TCP
+          port: 5432

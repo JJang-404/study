@@ -21,3 +21,16 @@ desktop.ini
 # 도구 생성물
 .playwright-mcp/
 .claude/settings.local.json
+
+# Terraform — 상태·플랜 파일에는 비밀 값이 들어갈 수 있다
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+*.tfplan
+terraform.tfvars
+*.auto.tfvars
+
+# 테스트·도구
+.pytest_cache/
+.omc/

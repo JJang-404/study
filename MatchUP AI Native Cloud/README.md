@@ -4,7 +4,7 @@
 > 강의 수강과 Claude Code 실습을 병행하며 남긴 학습 저장소입니다.
 
 [![K-MOOC](https://img.shields.io/badge/K--MOOC-강좌%20바로가기-0066CC)](https://www.kmooc.kr/view/course/detail/21167)
-![진행률](https://img.shields.io/badge/진행-1주차%20완료-success)
+![진행률](https://img.shields.io/badge/진행-2주차%20완료-success)
 ![주차](https://img.shields.io/badge/전체-6주차-lightgrey)
 
 ---
@@ -57,7 +57,7 @@
 | 주차 | 주제 | 핵심 키워드 | 상태 |
 |---|---|---|---|
 | **[1주차](./1주차/)** | 클라우드와 AI 패러다임 전환 | IaaS·PaaS·SaaS, AI Native, MCP, 로컬 LLM, 개발환경 구성 | ✅ 완료 |
-| **[2주차](./2주차/)** | AI 기반 인프라·앱·데이터 활용 기초 | IaC, MLOps, SDD, EARS, 데이터 파이프라인, 품질·거버넌스 | ⬜ 예정 |
+| **[2주차](./2주차/)** | AI 기반 인프라·앱·데이터 활용 기초 | IaC, MLOps, SDD, EARS, 데이터 파이프라인, 품질·거버넌스 | ✅ 완료 |
 | **[3주차](./3주차/)** | AI API 활용과 의미 기반 검색 | API 오류 처리, 임베딩, 벡터 DB, 유사도 검색 | ⬜ 예정 |
 | **[4주차](./4주차/)** | LLM·RAG 원리와 검색 품질 개선 | LLM 동작 원리, 프롬프트 설계, Hybrid RAG, 리랭킹 | ⬜ 예정 |
 | **[5주차](./5주차/)** | 에이전트·워크플로와 멀티에이전트 앱 | Agent vs Workflow, 프레임워크, MCP, 멀티모달 API | ⬜ 예정 |
@@ -77,7 +77,7 @@ MatchUP AI Native Cloud/
 ├── 1주차/
 │   ├── README.md                # 1주차 개요 및 실습 결과 요약
 │   ├── 실습프롬프트.md            # Claude Code 실습 프롬프트 모음 + MCP 개념 정리
-│   ├── 강의자료/                  # 배포 강의자료
+│   ├── 강의자료/                  # 배포 강의자료 (MD + 원본 PDF)
 │   ├── 산출물/                    # 실습으로 생성된 문서
 │   │   ├── 1-1_mcp_setup.md
 │   │   ├── 1-2_azure_ai_services.md

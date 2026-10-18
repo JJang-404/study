@@ -1,0 +1,26 @@
+# 계층 분리 — namespace 하나당 한 계층 (AC-20)
+# Azure의 서브넷 분리에 대응하는 로컬 구현이다.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: web
+  labels:
+    tier: web
+    platform: customer-event
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: api
+  labels:
+    tier: api
+    platform: customer-event
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: db
+  labels:
+    tier: db
+    platform: customer-event

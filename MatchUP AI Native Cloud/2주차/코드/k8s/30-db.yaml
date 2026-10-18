@@ -1,0 +1,94 @@
+# db 계층 — postgres StatefulSet + Headless Service (AC-19, AC-23)
+# Deployment가 아니라 StatefulSet인 이유: 데이터 계층은 안정적인 네트워크 ID와
+# 영속 볼륨이 필요하다. Deployment의 파드는 재생성 시 이름이 바뀐다.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+  namespace: db
+  labels:
+    tier: db
+type: Opaque
+stringData:
+  # 로컬 kind 클러스터 전용 개발 자격증명이다. 운영에서는
+  # External Secrets / Azure Key Vault 등 외부 저장소를 연결한다.
+  POSTGRES_USER: eventapp
+  POSTGRES_PASSWORD: localdev-only-change-me
+  POSTGRES_DB: events
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: db
+  labels:
+    tier: db
+spec:
+  # Headless(clusterIP: None) — StatefulSet 파드에 안정적인 DNS 이름을 준다.
+  # 외부 노출 타입이 아니므로 AC-23을 만족한다.
+  clusterIP: None
+  selector:
+    app: db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: db
+  labels:
+    app: db
+    tier: db
+spec:
+  serviceName: db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+        tier: db          # AC-21
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: db-credentials
+          env:
+            # 기본 데이터 디렉터리 바로 아래에 마운트하면 initdb가 실패한다.
+            # 하위 경로를 지정해 lost+found 등과 충돌을 피한다.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "eventapp", "-d", "events"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

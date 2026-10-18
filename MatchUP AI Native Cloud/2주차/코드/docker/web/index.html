@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>고객 이벤트 플랫폼</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 920px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  h1 { margin-bottom: .2rem; } .sub { color: #666; margin-top: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #ddd; padding: .5rem .6rem; text-align: left; vertical-align: top; font-size: .92rem; }
+  th { background: #f5f5f5; }
+  .ok { color: #0a7a2f; font-weight: 700; } .fail { color: #c0271b; font-weight: 700; } .wait { color: #888; }
+  code { background: #f2f2f2; padding: 0 .25rem; border-radius: 3px; }
+  small { color: #666; }
+</style>
+</head>
+<body>
+  <h1>web tier (nginx)</h1>
+  <p class="sub">3-tier 데이터 플랫폼 · 외부 진입점</p>
+
+  <h2>계층별 상태 <small id="stamp"></small></h2>
+  <table>
+    <thead><tr><th>계층</th><th>상태</th><th>무엇으로 판단했나</th><th>근거(실측값)</th></tr></thead>
+    <tbody>
+      <tr><td>web (nginx)</td><td id="s-web" class="wait">확인 중…</td><td id="h-web"></td><td id="e-web"></td></tr>
+      <tr><td>api (node)</td><td id="s-api" class="wait">확인 중…</td><td id="h-api"></td><td id="e-api"></td></tr>
+      <tr><td>db (postgres)</td><td id="s-db" class="wait">확인 중…</td><td id="h-db"></td><td id="e-db"></td></tr>
+    </tbody>
+  </table>
+
+  <h2>확인 경로</h2>
+  <table>
+    <tr><th>URL</th><th>의미</th></tr>
+    <tr><td><a href="/healthz"><code>/healthz</code></a></td><td>web 자체 상태. nginx가 직접 응답 (업스트림 미확인)</td></tr>
+    <tr><td><a href="/healthz/chain"><code>/healthz/chain</code></a></td><td>web → api → db 전 구간. api의 상세 점검 결과를 그대로 전달</td></tr>
+    <tr><td><a href="/api/healthz"><code>/api/healthz</code></a></td><td>api 상태 + db 점검 (프록시 경유)</td></tr>
+    <tr><td><a href="/api/livez"><code>/api/livez</code></a></td><td>api 프로세스 생존만 확인 (db 미확인, liveness probe용)</td></tr>
+  </table>
+  <p><small>이 화면은 위 경로를 브라우저에서 호출해 채워집니다. 새로고침하면 다른 파드(replica)가 응답해 파드 이름이 바뀔 수 있습니다.</small></p>
+
+  <h2>용어 설명 (처음 배우는 분께)</h2>
+  <table>
+    <tr><th>용어</th><th>뜻</th></tr>
+    <tr><td>파드(Pod)</td><td>쿠버네티스에서 컨테이너를 실행하는 가장 작은 단위. 이 화면에 나오는 "파드 이름"이 지금 응답한 파드다.</td></tr>
+    <tr><td>replicas(복제본)</td><td>같은 파드를 몇 개 띄울지. web·api는 2개라서 하나가 죽어도 서비스가 계속되고, 새로고침하면 다른 파드가 응답할 수 있다. db는 데이터 보존이 중요해 1개.</td></tr>
+    <tr><td>namespace</td><td>클러스터 안의 구획. 여기서는 web / api / db 세 계층을 각각 나눠 담았다.</td></tr>
+    <tr><td>Service</td><td>파드 앞에 놓이는 고정 주소. 파드는 죽으면 이름·IP가 바뀌지만 Service 주소는 그대로라서 다른 계층이 이 주소로 찾아온다.</td></tr>
+    <tr><td>NodePort / ClusterIP</td><td>Service의 종류. NodePort는 클러스터 밖(내 PC)에서도 접속 가능(web만). ClusterIP는 클러스터 안에서만 접속 가능(api·db).</td></tr>
+    <tr><td>*.svc.cluster.local</td><td>클러스터 내부 주소 형식 <code>&lt;Service&gt;.&lt;namespace&gt;.svc.cluster.local</code>. 예: <code>db.db.svc.cluster.local</code> = db namespace의 db Service.</td></tr>
+    <tr><td>healthz / livez</td><td>"살아 있나요?"를 묻는 확인용 주소. livez는 프로세스 생존만, healthz는 db 연결까지 점검한다.</td></tr>
+  </table>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function set(tier, ok, how, ev) {
+  const s = $('s-' + tier);
+  s.textContent = ok ? '정상' : '이상'; s.className = ok ? 'ok' : 'fail';
+  $('h-' + tier).textContent = how; $('e-' + tier).textContent = ev;
+}
+async function j(url) {
+  const r = await fetch(url, { cache: 'no-store' });
+  let body = null; try { body = await r.json(); } catch (e) {}
+  return { code: r.status, body };
+}
+async function run() {
+  try {
+    const w = await j('/healthz');
+    set('web', w.code === 200 && w.body.status === 'ok', 'nginx가 이 요청에 직접 응답했는가 (설정 로드·프로세스 생존)',
+        `HTTP ${w.code} · ${w.body.server} · 파드 ${w.body.pod}`);
+  } catch (e) { set('web', false, 'nginx 직접 응답', String(e)); }
+  try {
+    const a = await j('/healthz/chain');   // web -> api (-> db)
+    if (a.body && a.body.tier === 'api') {
+      const p = a.body.process, d = a.body.checks.db;
+      set('api', true, 'web이 api의 /healthz 를 호출해 응답을 받았는가 (web → api 통신 + api 프로세스 생존)',
+          `HTTP ${a.code} · 파드 ${p.pod} · node ${p.node} · 가동 ${p.uptime_s}s · 메모리 ${p.rss_mb}MB`);
+      set('db', d.status === 'ok', 'api가 ' + d.method + ' 를 시도해 연결이 맺어졌는가',
+          d.status === 'ok' ? `연결 성공 · ${d.latency_ms}ms` : `실패 · ${d.error}`);
+    } else { throw new Error('HTTP ' + a.code); }
+  } catch (e) {
+    set('api', false, 'web이 api의 /healthz 를 호출 (실패)', String(e));
+    set('db', false, 'api를 통해서만 확인 가능', 'api 응답 없음');
+  }
+  $('stamp').textContent = '(' + new Date().toLocaleTimeString() + ' 갱신)';
+}
+run(); setInterval(run, 10000);
+</script>
+</body>
+</html>

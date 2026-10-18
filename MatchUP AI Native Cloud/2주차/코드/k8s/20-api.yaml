@@ -1,0 +1,71 @@
+# api 계층 — node Deployment + ClusterIP Service (AC-18, AC-23)
+# 외부 노출 없음. web 계층에서만 도달한다 (AC-5).
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: api
+  labels:
+    app: api
+    tier: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+        tier: api          # AC-21
+    spec:
+      containers:
+        - name: node
+          image: jjang404/matchup-w2-api:1.2   # Docker Hub (docker/api)
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            # db 계층 주소. 네임스페이스를 넘는 접근은 FQDN이 필요하다.
+            - name: DB_HOST
+              value: db.db.svc.cluster.local
+          # liveness: 프로세스가 죽으면 재시작. db 같은 의존 대상은 보지 않는다(/livez).
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          # readiness: 트래픽을 받아도 되는가. 프로세스 기동 여부만 본다(/livez).
+          # /healthz(db 포함)는 db가 느릴 때 파드가 연쇄로 Unready 되므로 probe에 쓰지 않고 진단용으로만 쓴다.
+          readinessProbe:
+            httpGet:
+              path: /livez
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: api
+  labels:
+    tier: api
+spec:
+  # ClusterIP — 클러스터 내부에서만 접근 가능. NodePort/LoadBalancer 아님 (AC-23)
+  type: ClusterIP
+  selector:
+    app: api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

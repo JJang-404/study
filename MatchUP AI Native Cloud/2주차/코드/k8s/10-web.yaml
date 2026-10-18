@@ -1,0 +1,64 @@
+# web 계층 — nginx Deployment + NodePort Service (AC-17, AC-22)
+# 3계층 중 유일하게 외부로 노출되는 계층이다 (AC-4).
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: web
+  labels:
+    app: web
+    tier: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+        tier: web          # AC-21: 모든 워크로드에 tier 라벨
+    spec:
+      containers:
+        - name: nginx
+          image: jjang404/matchup-w2-web:1.2   # Docker Hub (docker/web)
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            # api 계층 주소 (네임스페이스를 넘으므로 FQDN)
+            - name: API_UPSTREAM
+              value: http://api.api.svc.cluster.local:8080
+          # 준비 상태를 명시해야 READY 1/1 판정이 의미를 가진다 (AC-25)
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: web
+  labels:
+    tier: web
+spec:
+  # NodePort — 세 계층 중 여기만 외부 노출한다 (AC-22)
+  type: NodePort
+  selector:
+    app: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30080
