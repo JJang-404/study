@@ -1,0 +1,159 @@
+"""1단계 · 파싱 — PDF / txt / md → 정규화 텍스트."""
+
+import logging
+import re
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+
+def parse_document(path: str) -> str:
+    """파일을 읽어 정규화된 텍스트를 반환한다."""
+    p = Path(path)
+    logger.info("[parser] 파일 로드 시작: %s (크기: %d bytes)", p, p.stat().st_size)
+
+    if not p.exists():
+        raise FileNotFoundError(f"파일 없음: {path}")
+
+    suffix = p.suffix.lower()
+    logger.info("[parser] 파일 타입 감지: %s", suffix or "(확장자 없음)")
+
+    if suffix == ".pdf":
+        text = _read_pdf(p)
+    elif suffix in (".txt", ".md", ""):
+        text = _read_text(p)
+    else:
+        logger.warning("[parser] 알 수 없는 확장자 %s → 텍스트로 시도", suffix)
+        text = _read_text(p)
+
+    logger.info("[parser] 원본 텍스트 길이: %d자", len(text))
+    text = _normalize(text)
+    logger.info("[parser] 정규화 후 텍스트 길이: %d자", len(text))
+    return text
+
+
+def _read_pdf(path: Path) -> str:
+    from pypdf import PdfReader
+    reader = PdfReader(str(path))
+    logger.info("[parser] PDF 페이지 수: %d", len(reader.pages))
+    pages = []
+    for i, page in enumerate(reader.pages):
+        extracted = page.extract_text() or ""
+        logger.info("[parser]   페이지 %d: %d자 추출", i + 1, len(extracted))
+        pages.append(extracted)
+    return "\n".join(pages)
+
+
+def _read_text(path: Path) -> str:
+    text = path.read_text(encoding="utf-8")
+    logger.info("[parser] 텍스트 파일 읽기 완료: %d줄", text.count("\n"))
+    return text
+
+
+def _normalize(text: str) -> str:
+    text = re.sub(r"[ \t]+", " ", text)       # 중복 공백/탭 → 단일 스페이스
+    text = re.sub(r"\n{3,}", "\n\n", text)    # 3개 이상 연속 개행 → 2개
+    text = text.strip()
+    return text
+
+
+# ── 단독 실행 시 샘플 문서 파싱 시연 ─────────────────────────────────────
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    sample = Path(__file__).parent / "sample.txt"
+    if not sample.exists():
+        logger.info("[parser] sample.txt 없음 → 더미 문서 생성")
+        sample.write_text(_SAMPLE_TEXT, encoding="utf-8")
+    result = parse_document(str(sample))
+    print(f"\n--- 파싱 결과 미리보기 (앞 300자) ---\n{result[:300]}")
+
+
+_SAMPLE_TEXT = """\
+# AI 개발 기초와 데이터 엔지니어링 — 종합 참고 문서
+
+## 1. RAG(Retrieval-Augmented Generation) 아키텍처
+
+RAG는 대규모 언어 모델(LLM)이 외부 지식 베이스에서 관련 문서를 검색(Retrieve)한 뒤, 그 내용을 참고해 답변을 생성(Generate)하는 아키텍처입니다. LLM은 학습 데이터의 시간적·도메인적 한계로 최신 정보나 기업 내부 문서를 알지 못합니다. RAG는 모델을 재학습하지 않고도 최신·전문 지식을 활용할 수 있게 하며, 환각(hallucination)을 줄이고 출처를 명시할 수 있다는 점이 핵심 장점입니다.
+
+RAG 파이프라인은 크게 오프라인(인덱싱) 단계와 온라인(검색·생성) 단계로 나뉩니다. 오프라인 단계에서는 문서를 수집·파싱·청킹·임베딩한 뒤 벡터 인덱스에 저장합니다. 온라인 단계에서는 사용자 질의를 임베딩해 인덱스를 검색하고, 상위 k개 청크를 프롬프트에 포함시켜 LLM이 답변을 생성합니다.
+
+RAG의 품질은 검색 단계의 정밀도(precision)와 재현율(recall)에 크게 의존합니다. 청크 크기, 오버랩, 임베딩 모델 선택, 검색 top-k 값 등이 모두 최종 답변 품질에 영향을 미칩니다. 하이브리드 검색(벡터 검색 + BM25 키워드 검색)을 결합하면 단일 방식보다 더 높은 성능을 달성할 수 있습니다.
+
+## 2. 문서 파싱과 전처리
+
+문서 파싱(Parsing)은 RAG 파이프라인의 첫 단계로, 다양한 형식의 원본 파일에서 순수 텍스트를 추출합니다. PDF 파일은 pypdf 또는 pdfplumber 라이브러리로 페이지별 텍스트를 추출하며, 표·이미지·수식이 포함된 경우 별도 처리가 필요합니다. 마크다운(.md)과 텍스트(.txt) 파일은 직접 읽어 처리하며, HTML은 BeautifulSoup으로 태그를 제거합니다.
+
+전처리 단계에서는 중복 공백과 연속 개행을 정규화하고, 불필요한 헤더·푸터·페이지 번호를 제거합니다. OCR이 필요한 스캔 문서는 tesseract 같은 외부 도구를 사용합니다. 전처리 품질이 낮으면 청킹과 임베딩 단계에서 노이즈가 증가해 검색 품질이 떨어집니다.
+
+언어별 처리도 고려해야 합니다. 한국어 문서는 형태소 분석기(konlpy, kiwipiepy)를 활용해 조사·어미를 처리하면 임베딩 품질이 향상됩니다. 다국어 문서는 langdetect로 언어를 감지한 뒤 언어별 전처리 파이프라인을 적용합니다.
+
+## 3. 청킹 전략
+
+청킹(Chunking)은 긴 텍스트를 임베딩 모델의 입력 한도(보통 512 토큰)에 맞는 작은 조각으로 나누는 과정입니다. 청크 크기와 오버랩은 RAG 성능에 직접 영향을 미치는 핵심 하이퍼파라미터입니다.
+
+고정 크기 슬라이딩 윈도우(Fixed-size sliding window) 방식은 구현이 단순하며, size=500자에 overlap=50자를 설정하면 인접 청크 간 문맥이 보존됩니다. 오버랩이 없으면 문장이 청크 경계에서 잘려 의미가 손상될 수 있습니다.
+
+재귀적 문자 분할(Recursive character splitting) 방식은 단락 → 문장 → 단어 순서로 우선순위를 두어 의미 단위를 최대한 보존합니다. LangChain의 RecursiveCharacterTextSplitter가 대표적입니다. 의미 기반 청킹(Semantic chunking)은 임베딩 유사도가 급격히 변하는 지점을 경계로 삼아 더 자연스러운 분할을 만듭니다.
+
+청크 크기 선택 기준: 짧은 청크(200자 이내)는 정밀도는 높지만 재현율이 낮고, 긴 청크(1000자 이상)는 재현율은 높지만 노이즈가 많아집니다. 실제 운영에서는 200~600자 범위에서 도메인에 맞게 실험적으로 결정합니다.
+
+## 4. 임베딩 모델과 벡터 표현
+
+임베딩(Embedding)은 텍스트를 고차원 벡터 공간에 매핑해 의미적 유사도 계산을 가능하게 합니다. sentence-transformers 라이브러리의 all-MiniLM-L6-v2 모델은 384차원 벡터를 생성하며, 속도와 성능의 균형이 좋아 RAG 프로토타입에 널리 사용됩니다.
+
+더 높은 품질이 필요하면 all-mpnet-base-v2(768차원)나 OpenAI의 text-embedding-3-small을 사용합니다. 한국어 특화 모델로는 jhgan/ko-sroberta-multitask, snunlp/KR-ELECTRA-discriminator 등이 있습니다. 모델 선택 시 MTEB(Massive Text Embedding Benchmark) 리더보드를 참고합니다.
+
+임베딩 벡터의 차원이 높을수록 표현력이 좋지만 저장 공간과 검색 시간이 증가합니다. 프로덕션 환경에서는 FAISS, Pinecone, Weaviate, Chroma 같은 벡터 데이터베이스를 사용해 ANN(Approximate Nearest Neighbor) 검색으로 수십억 개의 벡터를 밀리초 단위로 검색합니다.
+
+## 5. 코사인 유사도와 벡터 검색
+
+코사인 유사도(Cosine Similarity)는 두 벡터의 방향이 얼마나 유사한지를 -1에서 1 사이의 값으로 나타냅니다. 값이 1이면 방향이 완전히 같고, 0이면 직교(관련 없음), -1이면 반대 방향을 의미합니다. RAG 검색에서 코사인 유사도가 0.8 이상이면 의미적으로 매우 유사하다고 볼 수 있습니다.
+
+유클리디언 거리(Euclidean distance)와 달리 코사인 유사도는 벡터의 크기(magnitude)에 무관하게 방향만 비교하므로, 문서 길이가 달라도 공정하게 비교됩니다. 내적(dot product)은 정규화된 벡터에서 코사인 유사도와 동일하며 계산이 더 빠릅니다.
+
+top-k 검색은 질의 벡터와 코사인 유사도가 가장 높은 k개의 청크를 반환합니다. k 값이 작으면 정밀도가 높지만 관련 정보를 놓칠 수 있고, k 값이 크면 노이즈가 포함될 수 있습니다. 실제 RAG 시스템에서는 k=5~10을 초기 검색에 사용하고 리랭킹(reranking) 모델로 최종 k=3을 선별합니다.
+
+## 6. HTTP API 재시도 — 지수 백오프와 지터
+
+외부 API 호출은 일시적 장애(transient failure)가 빈번합니다. 네트워크 단절, 서버 과부하(5xx), 레이트 리밋 초과(429) 등이 대표적입니다. 이런 일시 장애에 즉시 재시도(naive retry)하면 이미 과부하된 서버에 더 많은 요청을 쏟아내 상황을 악화시킵니다.
+
+지수 백오프(Exponential Backoff)는 재시도 간격을 지수적으로 늘리는 전략입니다. 공식: 대기 시간 = base × 2^(attempt-1). base=1초로 설정하면 1초 → 2초 → 4초 → 8초로 증가합니다. 상한(cap)을 10~30초로 설정해 무한정 기다리지 않도록 합니다.
+
+지터(Jitter)는 여러 클라이언트가 동시에 실패 후 동시에 재시도하는 Thundering Herd 현상을 방지합니다. 대기 시간에 random(0, 0.5)를 더하면 클라이언트들이 서로 다른 시간에 재시도해 서버 부하가 분산됩니다. AWS는 Full Jitter와 Equal Jitter 두 가지 변형을 권장합니다.
+
+HTTP 429 Too Many Requests는 서버가 "속도 제한 초과, 잠시 기다려라"고 알리는 코드입니다. Retry-After 헤더가 포함된 경우 그 값(초)만큼 기다려야 합니다. 429는 4xx 계열이지만 일시 장애이므로 재시도해야 하며, 401·403·404 같은 다른 4xx는 재시도해도 의미가 없는 영구 실패입니다.
+
+## 7. 데이터 파이프라인 — 수집·정제·변환·적재
+
+데이터 파이프라인은 원천 데이터를 최종 저장소까지 이동·변환하는 일련의 과정입니다. ETL(Extract-Transform-Load)과 ELT(Extract-Load-Transform) 두 가지 패턴이 있으며, 클라우드 데이터 웨어하우스의 발전으로 ELT가 더 일반적입니다.
+
+수집(Ingest) 단계에서는 REST API, 데이터베이스 CDC(Change Data Capture), 파일 시스템, 스트림(Kafka, Kinesis) 등 다양한 소스에서 데이터를 가져옵니다. 견고한 HTTP 클라이언트(재시도·타임아웃·서킷 브레이커)는 이 단계의 핵심 컴포넌트입니다.
+
+정제(Clean) 단계에서는 결측값 처리, 중복 제거, 데이터 타입 통일, 이상값 탐지를 수행합니다. 변환(Transform) 단계에서는 비즈니스 로직을 적용해 집계·조인·파생 컬럼을 생성합니다. dbt(data build tool)는 SQL 기반 변환을 버전 관리하고 테스트할 수 있어 현대 데이터 스택의 표준이 됐습니다.
+
+적재(Load) 단계에서는 변환된 데이터를 BigQuery, Snowflake, Redshift 같은 데이터 웨어하우스나 Elasticsearch, 벡터 DB에 저장합니다. 배치(Batch)와 스트리밍(Streaming) 두 가지 방식이 있으며, Apache Airflow, Prefect, Dagster가 배치 오케스트레이션 도구로 널리 사용됩니다.
+
+## 8. 클라우드 AI 서비스와 인프라
+
+Azure OpenAI Service는 GPT-4o, GPT-4, embedding 모델을 엔터프라이즈 환경에서 사용할 수 있게 합니다. 데이터 레지던시, 프라이빗 네트워크(VNet), 콘텐츠 필터링, SLA 99.9% 등 기업 요구사항을 충족합니다. 배포(Deployment)와 모델은 분리돼 있어 같은 GPT-4 모델을 여러 배포로 운영해 레이트 리밋을 분산할 수 있습니다.
+
+쿠버네티스(Kubernetes)는 컨테이너화된 AI 서비스를 오케스트레이션하는 사실상 표준입니다. Deployment로 레플리카 수를 관리하고, HPA(Horizontal Pod Autoscaler)로 GPU 사용률에 따라 자동 스케일링합니다. GPU 노드에는 nvidia.com/gpu 리소스 요청을 명시해야 스케줄러가 올바른 노드에 배치합니다.
+
+벡터 데이터베이스를 쿠버네티스에 배포할 때는 StatefulSet과 PersistentVolume을 사용해 파드 재시작 시에도 인덱스 데이터가 유지되도록 합니다. 프로덕션에서는 인덱스를 오브젝트 스토리지(S3, Azure Blob)에 주기적으로 백업하는 것이 필수입니다.
+
+## 9. 프롬프트 엔지니어링과 LLM 활용
+
+프롬프트 엔지니어링은 LLM이 원하는 출력을 생성하도록 입력을 설계하는 기술입니다. RAG 시스템에서 프롬프트는 시스템 메시지, 검색된 컨텍스트, 사용자 질의 세 부분으로 구성됩니다. 컨텍스트를 어떻게 포맷하느냐에 따라 답변 품질이 크게 달라집니다.
+
+Chain-of-Thought(CoT) 프롬프팅은 복잡한 추론 문제에서 "단계별로 생각해봐"라는 지시를 추가해 정확도를 높입니다. Few-shot 프롬프팅은 입출력 예시를 2~5개 포함시켜 원하는 출력 형식을 시연합니다. 구조화된 출력(JSON mode)은 파싱 오류를 줄이고 다운스트림 처리를 단순화합니다.
+
+토큰 관리는 비용과 직결됩니다. GPT-4o는 입력 토큰당 $0.005, 출력 토큰당 $0.015입니다(2024 기준). RAG에서 컨텍스트 청크 수(top-k)를 늘리면 답변 품질은 높아지지만 토큰 비용도 증가합니다. 프롬프트 캐싱(Prompt Caching)을 활용하면 반복되는 시스템 메시지 비용을 최대 90% 절감할 수 있습니다.
+
+## 10. 평가와 모니터링
+
+RAG 시스템의 품질은 검색 단계와 생성 단계를 분리해 평가해야 합니다. 검색 평가 지표로는 Recall@k(상위 k개 안에 정답 청크가 있는 비율), MRR(Mean Reciprocal Rank), NDCG(Normalized Discounted Cumulative Gain)가 사용됩니다.
+
+생성 단계는 Faithfulness(답변이 컨텍스트에 근거하는가), Answer Relevancy(답변이 질의에 관련 있는가), Context Precision/Recall로 평가합니다. RAGAS 프레임워크는 이 지표들을 LLM을 사용해 자동 평가합니다.
+
+프로덕션 모니터링에서는 레이턴시(P50, P95, P99), 오류율, 토큰 사용량, 사용자 피드백(thumbs up/down)을 추적합니다. 드리프트(drift) 감지는 임베딩 공간의 분포 변화를 모니터링해 인덱스 재구축 시점을 결정하는 데 사용됩니다.
+"""
