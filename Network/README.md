@@ -19,7 +19,9 @@
 
 ## 파일 안내
 
-- [01. 네트워크와 IP 기초](01-network-ip-basics.md): 첫 번째 학습 노트
+- [01. 네트워크와 IP 기초](01-network-ip-basics.md): 네트워크 통신과 주소 기초
+- [02. IPv4 서브넷과 기본 게이트웨이](02-ipv4-subnetting.md): CIDR, 주소 범위 계산, 게이트웨이 판단
+- [03. DHCP와 DNS](03-dhcp-and-dns.md): 자동 IP 설정과 이름 조회
 - [질문과 답변](questions-and-answers.md): 공부 중 나온 질문과 확인된 답변을 누적합니다.
 - [실습 기록](lab-notes.md): 실습 환경, 명령, 관찰 결과와 배운 점을 기록합니다.
 
