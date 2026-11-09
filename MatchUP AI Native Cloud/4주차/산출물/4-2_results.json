@@ -1,0 +1,270 @@
+{
+  "zero_shot": [
+    {
+      "text": "배송이 정말 빠르고 포장도 꼼꼼했어요. 제품 품질도 사진과 똑같아서 매우 만족합니다.",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.9}",
+      "predicted": "positive",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 1.6183259999961592,
+      "correct": true
+    },
+    {
+      "text": "가격 대비 퀄리티가 너무 좋아요. 이 가격에 이 품질이면 재구매 의사 100%입니다!",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.9}",
+      "predicted": "positive",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.44184179199510254,
+      "correct": true
+    },
+    {
+      "text": "고객센터 응대가 친절하고 문제를 빠르게 해결해줬어요. 다음에도 꼭 여기서 구매할게요.",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.9}",
+      "predicted": "positive",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4372286249999888,
+      "correct": true
+    },
+    {
+      "text": "디자인도 예쁘고 기능도 완벽해요. 오래 고민했는데 구매하길 정말 잘했습니다.",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.9}",
+      "predicted": "positive",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4261312909948174,
+      "correct": true
+    },
+    {
+      "text": "처음엔 배송이 너무 늦어서 환불하려 했는데 막상 써보니 품질이 좋아서 만족합니다.",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.8}",
+      "predicted": "positive",
+      "confidence": 0.8,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.43227191700134426,
+      "correct": true
+    },
+    {
+      "text": "배송이 2주나 걸렸고 박스가 찌그러져서 왔어요. 다시는 이 판매자한테 주문 안 합니다.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.9}",
+      "predicted": "negative",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.42742979099421063,
+      "correct": true
+    },
+    {
+      "text": "제품이 사진이랑 완전 달라요. 소재도 싸구려 같고 냄새도 심해서 바로 버렸습니다.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.9}",
+      "predicted": "negative",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.42429695800092304,
+      "correct": true
+    },
+    {
+      "text": "환불 요청했는데 일주일째 답장이 없어요. 이게 최악의 고객서비스 아닌가요.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.9}",
+      "predicted": "negative",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.42454412499500904,
+      "correct": true
+    },
+    {
+      "text": "첫날부터 바로 고장났어요. 완전 불량품이고 환불도 거절당해서 돈만 날렸습니다.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.9}",
+      "predicted": "negative",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4230515839954023,
+      "correct": true
+    },
+    {
+      "text": "배송은 빨랐는데 막상 받아보니 생각보다 별로예요. 그냥 무난한 정도?",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.8}",
+      "predicted": "negative",
+      "confidence": 0.8,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4217691670055501,
+      "correct": true
+    },
+    {
+      "text": "오래 기다린 보람이 없네요. 뭐 쓸 수는 있겠지만 이 가격에 이게 최선인가요?",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.9}",
+      "predicted": "negative",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.42286504200455965,
+      "correct": true
+    },
+    {
+      "text": "친구가 극찬해서 샀는데 저한테는 잘 안 맞네요. 제 취향 문제인 것 같긴 한데 솔직히 별로예요.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.9}",
+      "predicted": "negative",
+      "confidence": 0.9,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4295733749968349,
+      "correct": true
+    }
+  ],
+  "few_shot": [
+    {
+      "text": "배송이 정말 빠르고 포장도 꼼꼼했어요. 제품 품질도 사진과 똑같아서 매우 만족합니다.",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.99}",
+      "predicted": "positive",
+      "confidence": 0.99,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.6202877910036477,
+      "correct": true
+    },
+    {
+      "text": "가격 대비 퀄리티가 너무 좋아요. 이 가격에 이 품질이면 재구매 의사 100%입니다!",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.99}",
+      "predicted": "positive",
+      "confidence": 0.99,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4327667500037933,
+      "correct": true
+    },
+    {
+      "text": "고객센터 응대가 친절하고 문제를 빠르게 해결해줬어요. 다음에도 꼭 여기서 구매할게요.",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.95}",
+      "predicted": "positive",
+      "confidence": 0.95,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.43037749999348307,
+      "correct": true
+    },
+    {
+      "text": "디자인도 예쁘고 기능도 완벽해요. 오래 고민했는데 구매하길 정말 잘했습니다.",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.95}",
+      "predicted": "positive",
+      "confidence": 0.95,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.42711612499988405,
+      "correct": true
+    },
+    {
+      "text": "처음엔 배송이 너무 늦어서 환불하려 했는데 막상 써보니 품질이 좋아서 만족합니다.",
+      "true_label": "positive",
+      "raw": "{\"label\": \"positive\", \"confidence\": 0.85}",
+      "predicted": "positive",
+      "confidence": 0.85,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4269357500015758,
+      "correct": true
+    },
+    {
+      "text": "배송이 2주나 걸렸고 박스가 찌그러져서 왔어요. 다시는 이 판매자한테 주문 안 합니다.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.99}",
+      "predicted": "negative",
+      "confidence": 0.99,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.44731324999884237,
+      "correct": true
+    },
+    {
+      "text": "제품이 사진이랑 완전 달라요. 소재도 싸구려 같고 냄새도 심해서 바로 버렸습니다.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.99}",
+      "predicted": "negative",
+      "confidence": 0.99,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4435842080056318,
+      "correct": true
+    },
+    {
+      "text": "환불 요청했는데 일주일째 답장이 없어요. 이게 최악의 고객서비스 아닌가요.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.99}",
+      "predicted": "negative",
+      "confidence": 0.99,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.43460262499866076,
+      "correct": true
+    },
+    {
+      "text": "첫날부터 바로 고장났어요. 완전 불량품이고 환불도 거절당해서 돈만 날렸습니다.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.99}",
+      "predicted": "negative",
+      "confidence": 0.99,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4372306250006659,
+      "correct": true
+    },
+    {
+      "text": "배송은 빨랐는데 막상 받아보니 생각보다 별로예요. 그냥 무난한 정도?",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.81}",
+      "predicted": "negative",
+      "confidence": 0.81,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.430785124997783,
+      "correct": true
+    },
+    {
+      "text": "오래 기다린 보람이 없네요. 뭐 쓸 수는 있겠지만 이 가격에 이게 최선인가요?",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.81}",
+      "predicted": "negative",
+      "confidence": 0.81,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.4398864999966463,
+      "correct": true
+    },
+    {
+      "text": "친구가 극찬해서 샀는데 저한테는 잘 안 맞네요. 제 취향 문제인 것 같긴 한데 솔직히 별로예요.",
+      "true_label": "negative",
+      "raw": "{\"label\": \"negative\", \"confidence\": 0.92}",
+      "predicted": "negative",
+      "confidence": 0.92,
+      "parse_ok": true,
+      "strict_parse_ok": true,
+      "elapsed_seconds": 0.44147199999861186,
+      "correct": true
+    }
+  ]
+}
